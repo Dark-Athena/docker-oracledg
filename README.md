@@ -192,8 +192,8 @@ docker-compose down -v
 docker-compose up -d oracle-primary oracle-standby
 ```
 
-### 内网构建
-需要先在外网构建构建 oracle-adg-base ，然后导出，再放到内网继续构建
+### 关于内网构建
+需要先在外网构建 oracle-adg-base 镜像，然后导出，再放到内网继续构建
 1. 外网
 ```bash
 docker-compose build oracle-base
@@ -212,3 +212,5 @@ docker logs -f oracle-standby   # 备库日志
 ```
 
 
+> **注意：该方案仅能用于简单测试，禁止用于生产环境！**
+> **本项目不提供ORACLE安装包，请自行从ORACLE官方网站获取！**
