@@ -1,0 +1,89 @@
+# =============================================================================
+# Oracle ADG Docker Compose 配置
+# 构建策略:
+#   1. docker-compose build oracle-base     # 构建基础镜像（缓存 dnf install）
+#   2. docker-compose build oracle-installed # 多阶段构建（基于 base，减小体积）
+#   3. docker-compose up -d oracle-primary oracle-standby
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------------------------
+  # Stage 1: 基础镜像 - 缓存 dnf install（只需构建一次）
+  # ---------------------------------------------------------------------------
+  oracle-base:
+    build:
+      context: .
+      dockerfile: ./oracle-base/Dockerfile
+    image: oracle-adg-base:latest
+
+  # ---------------------------------------------------------------------------
+  # Stage 2: 多阶段构建 - 安装 Oracle 软件（基于 base 镜像）
+  # ---------------------------------------------------------------------------
+  oracle-installed:
+    build:
+      context: .
+      dockerfile: ./oracle-installed/Dockerfile
+      args:
+        BASE_IMAGE: oracle-adg-base:latest
+    image: oracle-adg:latest
+    depends_on:
+      - oracle-base
+
+  # ---------------------------------------------------------------------------
+  # 主库服务
+  # ---------------------------------------------------------------------------
+  oracle-primary:
+    image: oracle-adg:latest
+    container_name: oracle-primary
+    hostname: oracle-primary
+    ports:
+      - "1521:1521"
+      - "5500:5500"
+    volumes:
+      - oracle_primary_data:/u02/oradata
+      - oracle_primary_fra:/u02/fast_recovery_area
+      - oracle_password_share:/u01/password_share
+    environment:
+      - ROLE=PRIMARY
+      - ORACLE_SID=ORCL
+      - ORACLE_PDB=ORCLPDB1
+      - ORACLE_PWD=Oradoc_db1
+    networks:
+      - oracle_network
+
+  # ---------------------------------------------------------------------------
+  # 备库服务
+  # ---------------------------------------------------------------------------
+  oracle-standby:
+    image: oracle-adg:latest
+    container_name: oracle-standby
+    hostname: oracle-standby
+    ports:
+      - "1522:1521"
+      - "5501:5500"
+    volumes:
+      - oracle_standby_data:/u02/oradata
+      - oracle_standby_fra:/u02/fast_recovery_area
+      - oracle_password_share:/u01/password_share
+    environment:
+      - ROLE=STANDBY
+      - ORACLE_SID=ORCL
+      - ORACLE_PDB=ORCLPDB1
+      - ORACLE_PWD=Oradoc_db1
+    networks:
+      - oracle_network
+    depends_on:
+      - oracle-primary
+
+networks:
+  oracle_network:
+    driver: bridge
+
+volumes:
+  oracle_primary_data:
+  oracle_primary_fra:
+  oracle_standby_data:
+  oracle_standby_fra:
+  oracle_password_share:
