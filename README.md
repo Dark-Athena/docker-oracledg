@@ -11,7 +11,7 @@
 
 ## 系统要求
 
-- Docker 18.06+, Docker Compose 1.22+
+- Docker 18.06+, Docker Compose 1.22+ （本项目开发环境： Docker 27.0.3 ,Docker Compose v2.28.1）
 - 内存 ≥ 16GB（推荐 48GB+）
 - 磁盘 ≥ 100GB
 - Oracle 安装包：`LINUX.X64_193000_db_home.zip`
